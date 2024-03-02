@@ -1,0 +1,25 @@
+mods.QuantumMechanics.name=Quantum Mechanics
+
+# Wonky Cassette Block
+entities.QuantumMechanics/WonkyCassetteBlock.placements.name.block=Wonky Cassette Block
+entities.QuantumMechanics/WonkyCassetteBlock.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which this block should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
+entities.QuantumMechanics/WonkyCassetteBlock.attributes.description.color=The hexadecimal colour code of this block.
+entities.QuantumMechanics/WonkyCassetteBlock.attributes.description.textureDirectory=The path to the folder containing two textures for this block, starting from Graphics/Atlases/Gameplay/.\nIn order for this to work, the specified folder must containing two image files named "solid.png" and "pressed.png", each corresponding to the texture of the block when activated and deactivated respectively. Preferably without the "/" symbol at the end.
+entities.QuantumMechanics/WonkyCassetteBlock.attributes.description.boostFrames=The number of frames after activation that a cassette boost is possible for. Must be at least 1 to be active.\nIf set to -1 (default), will use boost frame count from the controller.\nIf it is set to 0, cassette boosts will not be possible off of this block.
+entities.QuantumMechanics/WonkyCassetteBlock.attributes.description.controllerIndex=The index of the controller that controls this cassette block. Must be 0 or greater. 0 refers to the main controller.
+
+# Wonky Cassette Block Controller
+entities.QuantumMechanics/WonkyCassetteBlockController.placements.name.controller=Wonky Cassette Block Controller
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.name.bpm=BPM
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.bpm=The tempo of the cassette loop event in this room.
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.bars=The number of bars that should play before looping over in the cassette loop event.
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.timeSignature=The time signature of this cassette loop event, written in this form: x/y.\nATTENTION: this should always be a multiple of 1/16, since Cassette Blocks always work in 16th notes.\nExample: 5/4
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.sixteenthNoteParam=The FMOD parameter that should be affected in this room.
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.cassetteOffset=The constant offset in seconds that the cassette blocks will lag behind the music progress.\nPositive numbers will make the cassette blocks trigger later.
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.boostFrames=The number of frames after activation that a cassette boost is possible for. Must be at least 1. Cassette blocks with their own boost frame count set will not be affected.
+entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.disableFlag=The flag that deactivates all cassette blocks in the room. Leave empty if you don't want to use it.
+
+# Wonky Minor Cassette Block Controller
+entities.QuantumMechanics/WonkyMinorCassetteBlockController.placements.name.controller=Wonky Minor Cassette Block Controller
+entities.QuantumMechanics/WonkyMinorCassetteBlockController.attributes.description.timeSignature=The time signature of this cassette loop event, written in this form: x/y.\nATTENTION: this should always be a multiple of 1/16, since Cassette Blocks always work in 16th notes.\nExample: 5/4.\nDenominator must be equal to main controller's denominator.
+entities.QuantumMechanics/WonkyMinorCassetteBlockController.attributes.description.controllerIndex=The index of this controller. Used to determine which cassette blocks are controlled by this. Must be 1 or greater.
