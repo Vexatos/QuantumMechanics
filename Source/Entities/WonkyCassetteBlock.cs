@@ -14,12 +14,12 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     public class WonkyCassetteBlock : CassetteBlock {
         private static readonly Regex OnAtBeatsSplitRegex = new(@",\s*", RegexOptions.Compiled);
 
-        public readonly int[] OnAtBeats;
-        public readonly int ControllerIndex;
+        private readonly int[] OnAtBeats;
+        private readonly int ControllerIndex;
 
         private readonly int OverrideBoostFrames;
-        public int boostFrames = 0;
-        public bool boostActive = false;
+        private int boostFrames = 0;
+        private bool boostActive = false;
 
         private string textureDir;
 
@@ -51,6 +51,17 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             _pressed = new();
             _solid = new();
+
+            Add(new WonkyCassetteListener(controllerIndex) {
+                ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex),
+                OnStart = SetActivatedSilently,
+                OnStop = () => Activated = false,
+                OnWillActivate = WillToggle,
+                OnWillDeactivate = WillToggle,
+                OnActivated = () => Activated = true,
+                OnDeactivated = () => Activated = false,
+                FreezeUpdate = Update
+            });
         }
 
         public WonkyCassetteBlock(EntityData data, Vector2 offset, EntityID id)

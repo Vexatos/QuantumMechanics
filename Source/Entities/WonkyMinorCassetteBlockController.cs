@@ -100,21 +100,23 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 this.CassetteBeatTimer -= beatIncrement;
 
                 // beatIndex is always in sixteenth notes
-                var wonkyBlocks = scene.Tracker.GetEntities<WonkyCassetteBlock>().Cast<WonkyCassetteBlock>();
+                var wonkyListeners = scene.Tracker.GetComponents<WonkyCassetteListener>().Cast<WonkyCassetteListener>();
                 int nextBeatIndex = (this.CassetteWonkyBeatIndex + 1) % maxBeats;
                 int beatInBar = this.CassetteWonkyBeatIndex / (16 / beatLength) % barLength; // current beat
 
                 int nextBeatInBar = nextBeatIndex / (16 / beatLength) % barLength; // next beat
                 bool beatIncrementsNext = (nextBeatIndex / (float) (16 / beatLength)) % 1 == 0; // will the next beatIndex be the start of a new beat
 
-                foreach (WonkyCassetteBlock wonkyBlock in wonkyBlocks) {
-                    if (wonkyBlock.ControllerIndex != this.ControllerIndex)
+                foreach (WonkyCassetteListener wonkyListener in wonkyListeners) {
+                    if (wonkyListener.ControllerIndex != this.ControllerIndex)
                         continue;
+                    
+                    wonkyListener.OnBeat?.Invoke(beatInBar);
 
-                    wonkyBlock.Activated = wonkyBlock.OnAtBeats.Contains(beatInBar);
+                    wonkyListener.SetActivated(wonkyListener.ShouldBeActive(beatInBar));
 
-                    if (wonkyBlock.OnAtBeats.Contains(nextBeatInBar) != wonkyBlock.Activated && beatIncrementsNext) {
-                        wonkyBlock.WillToggle();
+                    if (wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated && beatIncrementsNext) {
+                        wonkyListener.WillToggle();
                     }
                 }
 

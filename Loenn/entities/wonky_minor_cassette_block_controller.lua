@@ -11,7 +11,6 @@ wonkyMinorCassetteBlockController.fieldInformation = {
         fieldType = "string",
         validator = function(str)
             local values = string.split(str, "/")()
-            print(str, #values, table.concat(values, "|"))
             return #values == 2 and string.match(values[1], "^%d+$") and string.match(values[2], "^%d+$")
         end
     },

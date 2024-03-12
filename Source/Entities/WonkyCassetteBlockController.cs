@@ -72,10 +72,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             session.CassetteBeatTimer = session.MusicBeatTimer - cassetteOffset;
             session.CassetteWonkyBeatIndex = 0;
 
-            var wonkyBlocks = scene.Tracker.GetEntities<WonkyCassetteBlock>().Cast<WonkyCassetteBlock>();
+            var wonkyListeners = scene.Tracker.GetComponents<WonkyCassetteListener>().Cast<WonkyCassetteListener>();
 
-            foreach (WonkyCassetteBlock wonkyBlock in wonkyBlocks) {
-                wonkyBlock.Activated = false;
+            foreach (WonkyCassetteListener wonkyListener in wonkyListeners) {
+                wonkyListener.Stop();
             }
 
             var minorControllers = scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>();
@@ -88,17 +88,17 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         }
 
         public void PrepareEnable(Scene scene, QuantumMechanicsModuleSession session) {
-            var wonkyBlocks = scene.Tracker.GetEntities<WonkyCassetteBlock>().Cast<WonkyCassetteBlock>();
+            var wonkyListeners = scene.Tracker.GetComponents<WonkyCassetteListener>().Cast<WonkyCassetteListener>();
 
-            foreach (WonkyCassetteBlock wonkyBlock in wonkyBlocks) {
-                if (wonkyBlock.ControllerIndex == 0) {
-                    if (wonkyBlock.OnAtBeats.Contains(session.CassetteWonkyBeatIndex / (16 / beatLength) % barLength) != wonkyBlock.Activated) {
-                        wonkyBlock.WillToggle();
+            foreach (WonkyCassetteListener wonkyListener in wonkyListeners) {
+                if (wonkyListener.ControllerIndex == 0) {
+                    if (wonkyListener.ShouldBeActive(session.CassetteWonkyBeatIndex / (16 / beatLength) % barLength) != wonkyListener.Activated) {
+                        wonkyListener.WillToggle();
                     }
                 } else {
                     foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
-                        if (wonkyBlock.ControllerIndex == minorController.ControllerIndex && wonkyBlock.OnAtBeats.Contains(minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength) != wonkyBlock.Activated) {
-                            wonkyBlock.WillToggle();
+                        if (wonkyListener.ControllerIndex == minorController.ControllerIndex && wonkyListener.ShouldBeActive(minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength) != wonkyListener.Activated) {
+                            wonkyListener.WillToggle();
                         }
                     }
                 }
@@ -185,21 +185,23 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 session.CassetteBeatTimer -= beatIncrement;
 
                 // beatIndex is always in sixteenth notes
-                var wonkyBlocks = scene.Tracker.GetEntities<WonkyCassetteBlock>().Cast<WonkyCassetteBlock>();
+                var wonkyListeners = scene.Tracker.GetComponents<WonkyCassetteListener>().Cast<WonkyCassetteListener>();
                 int nextBeatIndex = (session.CassetteWonkyBeatIndex + 1) % maxBeats;
                 int beatInBar = session.CassetteWonkyBeatIndex / (16 / beatLength) % barLength; // current beat
 
                 int nextBeatInBar = nextBeatIndex / (16 / beatLength) % barLength; // next beat
                 bool beatIncrementsNext = (nextBeatIndex / (float) (16 / beatLength)) % 1 == 0; // will the next beatIndex be the start of a new beat
 
-                foreach (WonkyCassetteBlock wonkyBlock in wonkyBlocks) {
-                    if (wonkyBlock.ControllerIndex != 0)
+                foreach (WonkyCassetteListener wonkyListener in wonkyListeners) {
+                    if (wonkyListener.ControllerIndex != 0)
                         continue;
 
-                    wonkyBlock.Activated = wonkyBlock.OnAtBeats.Contains(beatInBar);
+                    wonkyListener.OnBeat?.Invoke(beatInBar);
 
-                    if (wonkyBlock.OnAtBeats.Contains(nextBeatInBar) != wonkyBlock.Activated && beatIncrementsNext) {
-                        wonkyBlock.WillToggle();
+                    wonkyListener.SetActivated(wonkyListener.ShouldBeActive(beatInBar));
+
+                    if (wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated && beatIncrementsNext) {
+                        wonkyListener.WillToggle();
                     }
                 }
 
@@ -279,13 +281,15 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             WonkyCassetteBlockController mainController = self.Tracker.GetEntity<WonkyCassetteBlockController>();
             var minorControllers = self.Tracker.GetEntities<WonkyMinorCassetteBlockController>();
 
-            foreach (WonkyCassetteBlock wonkyBlock in self.Tracker.GetEntities<WonkyCassetteBlock>()) {
-                if (wonkyBlock.ControllerIndex == 0) {
-                    wonkyBlock.SetActivatedSilently(mainController != null && !session.CassetteBlocksDisabled && wonkyBlock.OnAtBeats.Contains(session.CassetteWonkyBeatIndex / (16 / mainController.beatLength) % mainController.barLength));
+            foreach (WonkyCassetteListener wonkyListener in self.Tracker.GetComponents<WonkyCassetteListener>()) {
+                if (wonkyListener.ControllerIndex == 0) {
+                    var currentBeatIndex = session.CassetteWonkyBeatIndex / (16 / mainController.beatLength) % mainController.barLength;
+                    wonkyListener.Start(mainController != null && !session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
                 } else {
                     foreach (WonkyMinorCassetteBlockController minorController in minorControllers) {
-                        if (wonkyBlock.ControllerIndex == minorController.ControllerIndex) {
-                            wonkyBlock.SetActivatedSilently(minorController != null && !session.CassetteBlocksDisabled && wonkyBlock.OnAtBeats.Contains(minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength));
+                        if (wonkyListener.ControllerIndex == minorController.ControllerIndex) {
+                            var currentBeatIndex = minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength;
+                            wonkyListener.Start(minorController != null && !session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
                         }
                     }
                 }
@@ -303,7 +307,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         private static void FreezeUpdate() {
             Engine.Scene.Tracker.GetEntity<WonkyCassetteBlockController>()?.AdvanceMusic(Engine.DeltaTime, Engine.Scene, QuantumMechanicsModule.Session);
-            Engine.Scene.Tracker.GetEntities<WonkyCassetteBlock>().ForEach(block => block.Update());
+            var components = Engine.Scene.Tracker.GetComponents<WonkyCassetteListener>();
+            foreach (WonkyCassetteListener wonkyListener in components) {
+                wonkyListener.FreezeUpdate?.Invoke();
+            }
         }
     }
 }
