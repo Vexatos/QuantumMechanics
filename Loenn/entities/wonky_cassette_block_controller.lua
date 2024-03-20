@@ -15,6 +15,10 @@ wonkyCassetteBlockController.fieldInformation = {
         fieldType = "integer",
         minimumValue = 1
     },
+    introBars =  {
+        fieldType = "integer",
+        minimumValue = 0
+    },
     timeSignature =  {
         fieldType = "string",
         validator = function(str)
@@ -32,6 +36,7 @@ wonkyCassetteBlockController.placements = {
     data = {
         bpm = 90,
         bars = 16,
+        introBars = 0,
         timeSignature = "4/4",
         sixteenthNoteParam = "sixteenth_note",
         cassetteOffset = 0.0,

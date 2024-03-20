@@ -15,6 +15,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         // Music stuff
         public readonly int bpm;
         public readonly int bars;
+        public readonly int introBars;
         public readonly int barLength; // The top number in the time signature
         public readonly int beatLength; // The bottom number in the time signature
         public readonly float cassetteOffset;
@@ -25,7 +26,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private readonly string DisableFlag;
 
         public float beatIncrement;
-        public int maxBeats;
+        private int maxBeats;
+        private int introBeats;
 
         private bool isLevelMusic;
         private EventInstance sfx;
@@ -34,9 +36,9 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private bool transitioningIn = false;
 
         public WonkyCassetteBlockController(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Int("bpm"), data.Int("bars"), data.Attr("timeSignature"), data.Attr("sixteenthNoteParam", "sixteenth_note"), data.Float("cassetteOffset"), data.Int("boostFrames", 1), data.Attr("disableFlag")) { }
+            : this(data.Position + offset, data.Int("bpm"), data.Int("bars"), data.Int("introBars"), data.Attr("timeSignature"), data.Attr("sixteenthNoteParam", "sixteenth_note"), data.Float("cassetteOffset"), data.Int("boostFrames", 1), data.Attr("disableFlag")) { }
 
-        public WonkyCassetteBlockController(Vector2 position, int bpm, int bars, string timeSignature, string param, float cassetteOffset, int boostFrames, string disableFlag)
+        public WonkyCassetteBlockController(Vector2 position, int bpm, int bars, int introBars, string timeSignature, string param, float cassetteOffset, int boostFrames, string disableFlag)
             : base(position) {
             Tag = Tags.FrozenUpdate | Tags.TransitionUpdate;
 
@@ -47,6 +49,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             this.bpm = bpm;
             this.bars = bars;
+            this.introBars = introBars;
             this.param = param;
             this.cassetteOffset = cassetteOffset;
 
@@ -68,6 +71,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         public void DisableAndReset(Scene scene, QuantumMechanicsModuleSession session) {
             session.MusicBeatTimer = 0;
             session.MusicWonkyBeatIndex = 0;
+            session.MusicLoopStarted = false;
 
             session.CassetteBeatTimer = session.MusicBeatTimer - cassetteOffset;
             session.CassetteWonkyBeatIndex = 0;
@@ -123,6 +127,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             // We always want sixteenth notes here, regardless of time signature
             beatIncrement = (float) (60.0 / bpm * beatLength / 16.0);
             maxBeats = 16 * bars * barLength / beatLength;
+            introBeats = 16 * introBars * barLength / beatLength;
 
             session.MusicWonkyBeatIndex = session.MusicWonkyBeatIndex % maxBeats;
 
@@ -170,6 +175,16 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             }
         }
 
+        public int NextBeatIndex(QuantumMechanicsModuleSession session, int currentBeatIndex) {
+            int nextBeatIndex = (currentBeatIndex + 1) % maxBeats;
+
+            if (session.MusicLoopStarted) {
+                nextBeatIndex = Math.Max(nextBeatIndex, introBeats);
+            }
+
+            return nextBeatIndex;
+        }
+
         private void AdvanceMusic(float time, Scene scene, QuantumMechanicsModuleSession session) {
             CheckDisableAndReset();
 
@@ -186,7 +201,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
                 // beatIndex is always in sixteenth notes
                 var wonkyListeners = scene.Tracker.GetComponents<WonkyCassetteListener>().Cast<WonkyCassetteListener>();
-                int nextBeatIndex = (session.CassetteWonkyBeatIndex + 1) % maxBeats;
+                int nextBeatIndex = NextBeatIndex(session, session.CassetteWonkyBeatIndex);
                 int beatInBar = session.CassetteWonkyBeatIndex / (16 / beatLength) % barLength; // current beat
 
                 int nextBeatInBar = nextBeatIndex / (16 / beatLength) % barLength; // next beat
@@ -206,7 +221,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 }
 
                 // Doing this here because it would go to the next beat with a sixteenth note offset at start
-                session.CassetteWonkyBeatIndex = (session.CassetteWonkyBeatIndex + 1) % maxBeats;
+                session.CassetteWonkyBeatIndex = NextBeatIndex(session, session.CassetteWonkyBeatIndex);
 
                 // Synchronize minor controllers right before the start of a bar
                 if (nextBeatInBar == 0 && beatInBar != 0) {
@@ -223,7 +238,11 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 sfx?.setParameterValue(param, (session.MusicWonkyBeatIndex * beatLength / 16) + 1);
 
                 // Doing this here because it would go to the next beat with a sixteenth note offset at start
-                session.MusicWonkyBeatIndex = (session.MusicWonkyBeatIndex + 1) % maxBeats;
+                session.MusicWonkyBeatIndex = NextBeatIndex(session, session.MusicWonkyBeatIndex);
+
+                if (!session.MusicLoopStarted && session.MusicWonkyBeatIndex == introBeats) {
+                    session.MusicLoopStarted = true;
+                }
             }
 
             // Make sure minor controllers are set up after the main one

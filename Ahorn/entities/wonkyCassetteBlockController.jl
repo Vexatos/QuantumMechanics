@@ -7,6 +7,7 @@ using ..Ahorn, Maple
     y::Integer,
     bpm::Integer=90,
     bars::Integer=16,
+    introBars::Integer=0,
     timeSignature::String="4/4",
     sixteenthNoteParam="sixteenth_note",
     cassetteOffset::Float64=0.0,
