@@ -113,7 +113,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             base.Awake(scene);
 
             if (Scene.Tracker.GetEntity<CassetteBlockManager>() is not null)
-                throw new Exception("WonkyCassetteBlockController detected in same room as ManualCassetteController!");
+                throw new Exception("WonkyCassetteBlockController detected in same room as CassetteBlockManager!");
 
             isLevelMusic = AreaData.Areas[SceneAs<Level>().Session.Area.ID].CassetteSong == "-";
 
@@ -215,7 +215,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
                     wonkyListener.SetActivated(wonkyListener.ShouldBeActive(beatInBar));
 
-                    if (wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated && beatIncrementsNext) {
+                    if (beatIncrementsNext && wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated) {
                         wonkyListener.WillToggle();
                     }
                 }
@@ -274,7 +274,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             if (!isLevelMusic && sfx == null) {
                 sfx = Audio.CreateInstance(AreaData.Areas[SceneAs<Level>().Session.Area.ID].CassetteSong);
-                Audio.Play("event:/game/general/cassette_block_switch_2");
+                //Audio.Play("event:/game/general/cassette_block_switch_2");
                 sfx.start();
             } else {
                 AdvanceMusic(Engine.DeltaTime, Scene, QuantumMechanicsModule.Session);

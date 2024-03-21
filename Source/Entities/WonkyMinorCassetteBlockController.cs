@@ -116,7 +116,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
                     wonkyListener.SetActivated(wonkyListener.ShouldBeActive(beatInBar));
 
-                    if (wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated && beatIncrementsNext) {
+                    if (beatIncrementsNext && wonkyListener.ShouldBeActive(nextBeatInBar) != wonkyListener.Activated) {
                         wonkyListener.WillToggle();
                     }
                 }

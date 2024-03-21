@@ -55,7 +55,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             Add(new WonkyCassetteListener(controllerIndex) {
                 ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex),
                 OnStart = SetActivatedSilently,
-                OnStop = () => Activated = false,
+                OnStop = Stop,
                 OnWillActivate = WillToggle,
                 OnWillDeactivate = WillToggle,
                 OnActivated = () => Activated = true,
@@ -147,6 +147,16 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                     item.Texture.Draw(item.Position + Position, item.Origin, item.Color, item.Scale, item.Rotation, item.Effects);
                 }
             }
+        }
+
+        private void Stop() {
+            // If fully activated, stopping is going to only move the block down by 1 pixel
+            // We need one extra here.
+            if (this.blockHeight == 2 || (!Activated && this.blockHeight == 1)) {
+                ShiftSize(1);
+            }
+
+            Activated = false;
         }
 
         private static void IndexConnections(Level level) {
