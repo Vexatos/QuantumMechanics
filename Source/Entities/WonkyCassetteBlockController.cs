@@ -247,11 +247,11 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             // Make sure minor controllers are set up after the main one
             foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
+                minorController.AdvanceMusic(time, scene);
+
                 if (synchronizeMinorControllers) {
                     minorController.Synchronize(time, session);
                 }
-
-                minorController.AdvanceMusic(time, scene);
             }
         }
 

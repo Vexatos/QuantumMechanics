@@ -52,9 +52,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         // Synchronize cassette position to start of a bar
         // Next tick will activate the first beat
+        // Next tick will be synchronized with the main controller's next tick 
         public void Synchronize(float time, QuantumMechanicsModuleSession session) {
             this.CassetteWonkyBeatIndex = 0;
-            this.CassetteBeatTimer = beatDelta + (session.CassetteBeatTimer - time);
+            this.CassetteBeatTimer = beatDelta + session.CassetteBeatTimer;
         }
 
         // Called by main controller
@@ -63,8 +64,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 throw new ArgumentException($"Minor and main controller time signature denominator don't match. Main is {mainController.beatLength}, minor is {beatLength}");
 
             // Ensure that session.CassetteBeatTimer is always smaller than this.beatIncrement
-            if (barLength > mainController.barLength)
-                throw new ArgumentException($"Minor controller has a larger time signature numerator than main controller. Main controller must have the largest time signature numerator.  Main is {mainController.barLength}, minor is {barLength}");
+            if (barLength >= mainController.barLength)
+                throw new ArgumentException($"Minor controller does not have a smaller time signature numerator than main controller. Main controller must have the largest time signature numerator.  Main is {mainController.barLength}, minor is {barLength}");
 
             // Get minor bpm from main controller
             // This has to divide into integers, otherwise I am not responsible for desyncs
