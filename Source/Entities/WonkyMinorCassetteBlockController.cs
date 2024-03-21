@@ -16,6 +16,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         public readonly int ControllerIndex;
 
+        public readonly EntityID ID;
+
         public int CassetteWonkyBeatIndex;
         public float CassetteBeatTimer;
 
@@ -24,10 +26,12 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private int maxBeats;
 
         public WonkyMinorCassetteBlockController(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Attr("timeSignature"), data.Int("controllerIndex", 1)) { }
+            : this(data.Position + offset, new EntityID(data.Level.Name, data.ID), data.Attr("timeSignature"), data.Int("controllerIndex", 1)) { }
 
-        public WonkyMinorCassetteBlockController(Vector2 position, string timeSignature, int controllerIndex)
+        public WonkyMinorCassetteBlockController(Vector2 position, EntityID id, string timeSignature, int controllerIndex)
             : base(position) {
+
+            ID = id;
 
             GroupCollection timeSignatureParsed = new Regex(@"^(\d+)/(\d+)$").Match(timeSignature).Groups;
             if (timeSignatureParsed.Count == 0)

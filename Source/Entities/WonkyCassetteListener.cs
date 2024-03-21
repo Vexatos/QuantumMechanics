@@ -68,8 +68,14 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         /// </summary>
         public Modes Mode;
 
-        public WonkyCassetteListener(int controllerIndex) : base(false, false) {
+        /// <summary>
+        /// Matches the functionality of <see cref="CassetteBlock.ID"/>.
+        /// </summary>
+        public EntityID ID;
+
+        public WonkyCassetteListener(EntityID id, int controllerIndex) : base(false, false) {
             ControllerIndex = controllerIndex;
+            ID = id;
         }
 
         public void SetActivated(bool activated) {

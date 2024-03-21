@@ -23,6 +23,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         public readonly int ExtraBoostFrames;
 
+        public readonly EntityID ID;
+
         private readonly string DisableFlag;
 
         public float beatIncrement;
@@ -36,16 +38,18 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private bool transitioningIn = false;
 
         public WonkyCassetteBlockController(EntityData data, Vector2 offset)
-            : this(data.Position + offset, data.Int("bpm"), data.Int("bars"), data.Int("introBars"), data.Attr("timeSignature"), data.Attr("sixteenthNoteParam", "sixteenth_note"), data.Float("cassetteOffset"), data.Int("boostFrames", 1), data.Attr("disableFlag")) { }
+            : this(data.Position + offset, new EntityID(data.Level.Name, data.ID), data.Int("bpm"), data.Int("bars"), data.Int("introBars"), data.Attr("timeSignature"), data.Attr("sixteenthNoteParam", "sixteenth_note"), data.Float("cassetteOffset"), data.Int("boostFrames", 1), data.Attr("disableFlag")) { }
 
-        public WonkyCassetteBlockController(Vector2 position, int bpm, int bars, int introBars, string timeSignature, string param, float cassetteOffset, int boostFrames, string disableFlag)
+        public WonkyCassetteBlockController(Vector2 position, EntityID id, int bpm, int bars, int introBars, string timeSignature, string param, float cassetteOffset, int boostFrames, string disableFlag)
             : base(position) {
             Tag = Tags.FrozenUpdate | Tags.TransitionUpdate;
 
             Add(new TransitionListener() {
                 OnInBegin = () => transitioningIn = true,
-                OnInEnd = () => transitioningIn = false,
+                OnInEnd = () => transitioningIn = false
             });
+
+            ID = id;
 
             this.bpm = bpm;
             this.bars = bars;
@@ -103,6 +107,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                     foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
                         if (wonkyListener.ControllerIndex == minorController.ControllerIndex && wonkyListener.ShouldBeActive(minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength) != wonkyListener.Activated) {
                             wonkyListener.WillToggle();
+                            break;
                         }
                     }
                 }
@@ -149,7 +154,9 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             // Make sure minor controllers are set up after the main one
             foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
-                minorController.MinorAwake(scene, session, this);
+                if (minorController.ID.Level == this.ID.Level) {
+                    minorController.MinorAwake(scene, session, this);
+                }
             }
         }
 
@@ -247,6 +254,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             // Make sure minor controllers are set up after the main one
             foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
+                if (minorController.ID.Level != (scene as Level)?.Session?.Level) {
+                    continue;
+                }
+
                 minorController.AdvanceMusic(time, scene);
 
                 if (synchronizeMinorControllers) {
@@ -297,18 +308,28 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             orig(self, playerIntro, isFromLoader);
 
             QuantumMechanicsModuleSession session = QuantumMechanicsModule.Session;
-            WonkyCassetteBlockController mainController = self.Tracker.GetEntity<WonkyCassetteBlockController>();
+            WonkyCassetteBlockController mainController = self.Tracker.GetEntities<WonkyCassetteBlockController>().Cast<WonkyCassetteBlockController>().FirstOrDefault(controller => controller.ID.Level == self.Session.Level);
+
+            if (mainController == null) {
+                return;
+            }
+
             var minorControllers = self.Tracker.GetEntities<WonkyMinorCassetteBlockController>();
 
             foreach (WonkyCassetteListener wonkyListener in self.Tracker.GetComponents<WonkyCassetteListener>()) {
+                if (wonkyListener.ID.Level != self.Session.Level) {
+                    continue;
+                }
+
                 if (wonkyListener.ControllerIndex == 0) {
                     var currentBeatIndex = session.CassetteWonkyBeatIndex / (16 / mainController.beatLength) % mainController.barLength;
-                    wonkyListener.Start(mainController != null && !session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
+                    wonkyListener.Start(!session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
                 } else {
                     foreach (WonkyMinorCassetteBlockController minorController in minorControllers) {
-                        if (wonkyListener.ControllerIndex == minorController.ControllerIndex) {
+                        if (minorController.ID.Level == self.Session.Level && wonkyListener.ControllerIndex == minorController.ControllerIndex) {
                             var currentBeatIndex = minorController.CassetteWonkyBeatIndex / (16 / minorController.beatLength) % minorController.barLength;
-                            wonkyListener.Start(minorController != null && !session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
+                            wonkyListener.Start(!session.CassetteBlocksDisabled && wonkyListener.ShouldBeActive(currentBeatIndex));
+                            break;
                         }
                     }
                 }

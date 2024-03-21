@@ -52,7 +52,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             _pressed = new();
             _solid = new();
 
-            Add(new WonkyCassetteListener(controllerIndex) {
+            Add(new WonkyCassetteListener(ID, controllerIndex) {
                 ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex),
                 OnStart = SetActivatedSilently,
                 OnStop = Stop,
