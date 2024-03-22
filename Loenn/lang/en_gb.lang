@@ -24,3 +24,10 @@ entities.QuantumMechanics/WonkyCassetteBlockController.attributes.description.di
 entities.QuantumMechanics/WonkyMinorCassetteBlockController.placements.name.controller=Wonky Minor Cassette Block Controller
 entities.QuantumMechanics/WonkyMinorCassetteBlockController.attributes.description.timeSignature=The time signature of this cassette loop event, written in this form: x/y.\nATTENTION: this should always be a multiple of 1/16, since Cassette Blocks always work in 16th notes.\nExample: 5/4.\nDenominator must be equal to main controller's denominator.
 entities.QuantumMechanics/WonkyMinorCassetteBlockController.attributes.description.controllerIndex=The index of this controller. Used to determine which cassette blocks are controlled by this. Must be 1 or greater.
+
+# Wonky Flag
+entities.QuantumMechanics/WonkyFlag.placements.name.flag=Wonky Flag
+entities.QuantumMechanics/WonkyFlag.attributes.description.flag=The flag to activate on beat and deactivate off beat.
+entities.QuantumMechanics/WonkyFlag.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which the flag should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
+entities.QuantumMechanics/WonkyFlag.attributes.description.controllerIndex=The index of the controller that controls this flag. Must be 0 or greater. 0 refers to the main controller.
+entities.QuantumMechanics/WonkyFlag.attributes.description.invert=Whether to invert all flag logic, deactivating on beat and activating off beat.
