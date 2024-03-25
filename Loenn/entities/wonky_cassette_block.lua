@@ -63,8 +63,9 @@ wonkyCassetteBlock.placements = {
 
 -- Filter by cassette blocks sharing the same index
 local function getSearchPredicate(entity)
+    local entityKey = string.gsub(entity.onAtBeats, "%s", "")
     return function(target)
-        return entity._name == target._name and entity.index == target.index
+        return entity._name == target._name and entity.controllerIndex == target.controllerIndex and entityKey == string.gsub(target.onAtBeats, "%s", "")
     end
 end
 
