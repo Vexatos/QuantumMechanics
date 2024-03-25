@@ -146,12 +146,6 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             // Positive offsets will make the cassette blocks lag behind the music progress
             session.CassetteBeatTimer = session.MusicBeatTimer - cassetteOffset;
 
-            // Reset timers on song change
-            if (session.CassetteBlocksLastParameter != param) {
-                DisableAndReset(scene, session);
-                session.CassetteBlocksLastParameter = param;
-            }
-
             // Make sure minor controllers are set up after the main one
             foreach (WonkyMinorCassetteBlockController minorController in Scene.Tracker.GetEntities<WonkyMinorCassetteBlockController>()) {
                 if (minorController.ID.Level == this.ID.Level) {
@@ -163,13 +157,18 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         public void CheckDisableAndReset() {
             QuantumMechanicsModuleSession session = QuantumMechanicsModule.Session;
 
+            Level level = SceneAs<Level>();
+
             if (DisableFlag.Length == 0) {
-                if (session.CassetteBlocksDisabled)
+                if (session.CassetteBlocksDisabled) {
                     session.CassetteBlocksDisabled = false;
+
+                    PrepareEnable(level, session);
+                }
+
                 return;
             }
 
-            Level level = SceneAs<Level>();
             bool shouldDisable = level.Session.GetFlag(DisableFlag);
 
             if (!session.CassetteBlocksDisabled && shouldDisable) {
@@ -333,6 +332,13 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                         }
                     }
                 }
+            }
+
+            // Reset timers on song change
+            // Has to happen after controllers and listeners are fully initialized
+            if (session.CassetteBlocksLastParameter != mainController.param) {
+                mainController.DisableAndReset(self, session);
+                session.CassetteBlocksLastParameter = mainController.param;
             }
         }
 

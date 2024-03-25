@@ -36,7 +36,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             ControllerIndex = controllerIndex;
 
             Add(new WonkyCassetteListener(id, controllerIndex) {
-                ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex) ^ Invert,
+                ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex) != Invert,
                 OnStart = SetFlag,
                 OnStop = () => SetFlag(false),
                 OnActivated = () => SetFlag(true),

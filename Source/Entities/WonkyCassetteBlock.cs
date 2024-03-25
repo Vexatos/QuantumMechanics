@@ -152,7 +152,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private void Stop() {
             // If fully activated, stopping is going to only move the block down by 1 pixel
             // We need one extra here.
-            if (this.blockHeight == 2 || (!Activated && this.blockHeight == 1)) {
+            if ((Activated && this.blockHeight == 2) || (!Activated && this.blockHeight == 1)) {
                 ShiftSize(1);
             }
 
