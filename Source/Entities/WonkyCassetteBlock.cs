@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Celeste.Mod.QuantumMechanics.Entities {
+namespace Celeste.Mod.QuantumMechanics.Entities
+{
     [CustomEntity("QuantumMechanics/WonkyCassetteBlock")]
     [Tracked]
-    public class WonkyCassetteBlock : CassetteBlock {
+    public class WonkyCassetteBlock : CassetteBlock
+    {
         private static readonly Regex OnAtBeatsSplitRegex = new(@",\s*", RegexOptions.Compiled);
 
         private readonly int[] OnAtBeats;
@@ -27,10 +29,13 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         public static readonly Dictionary<string, bool[,]> Connections = new(StringComparer.Ordinal);
 
-        private List<Image> _pressed, _solid; // we'll use these instead of pressed and solid, to make `UpdateVisualState` not enumerate through them for no reason.
+        public List<Image> _pressed, _solid; // we'll use these instead of pressed and solid, to make `UpdateVisualState` not enumerate through them for no reason.
+
+        public bool lonely = false; // if true, won't connect to any wonky cassette blocks other than itself
 
         public WonkyCassetteBlock(Vector2 position, EntityID id, float width, float height, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex)
-            : base(position, id, width, height, index, 1.0f) {
+            : base(position, id, width, height, index, 1.0f)
+        {
             Tag = Tags.FrozenUpdate | Tags.TransitionUpdate;
 
             OnAtBeats = OnAtBeatsSplitRegex.Split(moveSpec).Select(s => int.Parse(s) - 1).ToArray();
@@ -46,13 +51,14 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 throw new ArgumentException($"Controller Index must be 0 or greater, but is set to {controllerIndex}.");
 
             ControllerIndex = controllerIndex;
-            
+
             Key = $"{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}";
 
             _pressed = new();
             _solid = new();
 
-            Add(new WonkyCassetteListener(ID, controllerIndex) {
+            Add(new WonkyCassetteListener(ID, controllerIndex)
+            {
                 ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex),
                 OnStart = SetActivatedSilently,
                 OnStop = Stop,
@@ -69,65 +75,85 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         // We need to reimplement some of our parent's methods because they refer directly to CassetteBlock when fetching entities
 
-        private static void NewFindInGroup(On.Celeste.CassetteBlock.orig_FindInGroup orig, CassetteBlock self, CassetteBlock block) {
-            if (self is not WonkyCassetteBlock) {
+        private static void NewFindInGroup(On.Celeste.CassetteBlock.orig_FindInGroup orig, CassetteBlock self, CassetteBlock block)
+        {
+            if (self is not WonkyCassetteBlock)
+            {
                 orig(self, block);
 
                 return;
             }
 
-            WonkyCassetteBlock selfCast = (WonkyCassetteBlock) self;
+            WonkyCassetteBlock selfCast = (WonkyCassetteBlock)self;
 
-            foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>()) {
+            if (selfCast.lonely)
+                return;
+
+            foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
+            {
                 if (entity != self && entity != block && entity.Index == self.Index &&
                     entity.ControllerIndex == selfCast.ControllerIndex &&
-                    (entity.CollideRect(new Rectangle((int) block.X - 1, (int) block.Y, (int) block.Width + 2, (int) block.Height))
-                        || entity.CollideRect(new Rectangle((int) block.X, (int) block.Y - 1, (int) block.Width, (int) block.Height + 2))) &&
-                    !self.group.Contains(entity) && entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats)) {
+                    (entity.CollideRect(new Rectangle((int)block.X - 1, (int)block.Y, (int)block.Width + 2, (int)block.Height))
+                        || entity.CollideRect(new Rectangle((int)block.X, (int)block.Y - 1, (int)block.Width, (int)block.Height + 2))) &&
+                    !self.group.Contains(entity) && entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats))
+                {
                     self.group.Add(entity);
                     NewFindInGroup(orig, self, entity);
                 }
             }
         }
 
-        public override void Awake(Scene scene) {
-            if (Connections.Count == 0) {
+        public override void Awake(Scene scene)
+        {
+            if (Connections.Count == 0)
+            {
                 IndexConnections(SceneAs<Level>());
             }
 
             base.Awake(scene);
         }
 
-        public override void Update() {
+        public override void Update()
+        {
             bool activating = groupLeader && Activated && !Collidable;
 
             base.Update();
 
-            if (Activated && Collidable) {
-                if (activating) {
+            if (Activated && Collidable)
+            {
+                if (activating)
+                {
                     // Block has activated, Cassette boost is possible this frame
-                    if (OverrideBoostFrames > 0) {
+                    if (OverrideBoostFrames > 0)
+                    {
                         boostFrames = OverrideBoostFrames - 1;
                         boostActive = true;
-                    } else if (OverrideBoostFrames < 0) {
+                    }
+                    else if (OverrideBoostFrames < 0)
+                    {
                         WonkyCassetteBlockController controller = this.Scene.Tracker.GetEntity<WonkyCassetteBlockController>();
-                        if (controller != null) {
+                        if (controller != null)
+                        {
                             boostFrames = controller.ExtraBoostFrames;
                             boostActive = true;
                         }
                     }
 
-                    foreach (CassetteBlock cassetteBlock in group) {
-                        WonkyCassetteBlock wonkyBlock = (WonkyCassetteBlock) cassetteBlock;
+                    foreach (CassetteBlock cassetteBlock in group)
+                    {
+                        WonkyCassetteBlock wonkyBlock = (WonkyCassetteBlock)cassetteBlock;
                         wonkyBlock.boostFrames = boostFrames;
                         wonkyBlock.boostActive = boostActive;
                     }
                 }
 
-                if (boostActive) {
+                if (boostActive)
+                {
                     // Vanilla lift boost is active this frame, do nothing
                     boostActive = false;
-                } else if (boostFrames > 0) {
+                }
+                else if (boostFrames > 0)
+                {
                     // Provide an extra boost for the duration of the extra boost frames
                     this.LiftSpeed.Y = -1 / Engine.DeltaTime;
 
@@ -139,42 +165,52 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             }
         }
 
-        public override void Render() {
-            if (Utilities.IsRectangleVisible(Position.X, Position.Y, Width, Height)) {
+        public override void Render()
+        {
+            if (Utilities.IsRectangleVisible(Position.X, Position.Y, Width, Height))
+            {
                 List<Image> images = Collidable ? _solid : _pressed;
 
-                foreach (Image item in images) {
+                foreach (Image item in images)
+                {
                     item.Texture.Draw(item.Position + Position, item.Origin, item.Color, item.Scale, item.Rotation, item.Effects);
                 }
             }
         }
 
-        private void Stop() {
+        private void Stop()
+        {
             // If fully activated, stopping is going to only move the block down by 1 pixel
             // We need one extra here.
-            if ((Activated && this.blockHeight == 2) || (!Activated && this.blockHeight == 1)) {
+            if ((Activated && this.blockHeight == 2) || (!Activated && this.blockHeight == 1))
+            {
                 ShiftSize(1);
             }
 
             Activated = false;
         }
 
-        private static void IndexConnections(Level level) {
+        private static void IndexConnections(Level level)
+        {
             LevelData levelData = level.Session.LevelData;
             Rectangle bounds = levelData.Bounds;
             Rectangle tileBounds = levelData.TileBounds;
 
-            foreach (WonkyCassetteBlock entity in level.Tracker.GetEntities<WonkyCassetteBlock>()) {
+            foreach (WonkyCassetteBlock entity in level.Tracker.GetEntities<WonkyCassetteBlock>())
+            {
                 bool[,] connection;
 
-                if (!Connections.TryGetValue(entity.Key, out connection)) {
+                if (!Connections.TryGetValue(entity.Key, out connection))
+                {
                     Connections.Add(entity.Key, connection = new bool[tileBounds.Width + 2, tileBounds.Height + 2]);
                 }
 
-                for (float x = entity.Left; x < entity.Right; x += 8f) {
-                    for (float y = entity.Top; y < entity.Bottom; y += 8f) {
-                        int ix = ((int) x - bounds.Left) / 8 + 1;
-                        int iy = ((int) y - bounds.Top) / 8 + 1;
+                for (float x = entity.Left; x < entity.Right; x += 8f)
+                {
+                    for (float y = entity.Top; y < entity.Bottom; y += 8f)
+                    {
+                        int ix = ((int)x - bounds.Left) / 8 + 1;
+                        int iy = ((int)y - bounds.Top) / 8 + 1;
 
                         if (ix < 0) ix = 0;
                         else if (ix > tileBounds.Width) ix = tileBounds.Width + 1;
@@ -187,21 +223,29 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             }
         }
 
-        private static bool NewCheckForSame(On.Celeste.CassetteBlock.orig_CheckForSame origCheckForSame, CassetteBlock self, float x, float y) {
+        private static bool NewCheckForSame(On.Celeste.CassetteBlock.orig_CheckForSame origCheckForSame, CassetteBlock self, float x, float y)
+        {
             if (!(self is WonkyCassetteBlock))
                 return origCheckForSame(self, x, y);
 
-            WonkyCassetteBlock selfCast = (WonkyCassetteBlock) self;
+            WonkyCassetteBlock selfCast = (WonkyCassetteBlock)self;
+
+            if (selfCast.lonely)
+                return self.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8)); // we *should* precalculate this and im pretty sure thats what IndexConnections does but  im too tired for index math rn
 
             bool[,] connection;
 
-            if (!Connections.TryGetValue(selfCast.Key, out connection)) {
+            if (!Connections.TryGetValue(selfCast.Key, out connection))
+            {
                 // Fallback just in case
-                foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>()) {
+                foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
+                {
+
                     if (entity.Index == self.Index && entity.ControllerIndex == selfCast.ControllerIndex &&
-                        entity.Collider.Collide(new Rectangle((int) x, (int) y, 8, 8)) &&
-                        entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats)) {
-                        return true;                        
+                        entity.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8)) &&
+                        entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats))
+                    {
+                        return true;
                     }
                 }
 
@@ -213,8 +257,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             Rectangle bounds = levelData.Bounds;
             Rectangle tileBounds = levelData.TileBounds;
 
-            int ix = ((int) x - bounds.Left) / 8 + 1;
-            int iy = ((int) y - bounds.Top) / 8 + 1;
+            int ix = ((int)x - bounds.Left) / 8 + 1;
+            int iy = ((int)y - bounds.Top) / 8 + 1;
 
             if (ix < 0) ix = 0;
             else if (ix > tileBounds.Width) ix = tileBounds.Width + 1;
@@ -224,8 +268,11 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             return connection[ix, iy];
         }
 
-        private static void CassetteBlock_SetImage(On.Celeste.CassetteBlock.orig_SetImage orig, CassetteBlock self, float x, float y, int tx, int ty) {
-            if (self is WonkyCassetteBlock block) {
+        private static void CassetteBlock_SetImage(On.Celeste.CassetteBlock.orig_SetImage orig, CassetteBlock self, float x, float y, int tx, int ty)
+        {
+            if (self is WonkyCassetteBlock block)
+            {
+
                 GFX.Game.PushFallback(GFX.Game["objects/cassetteblock/pressed00"]);
                 Image img = block.CreateImage(x, y, tx, ty, GFX.Game[block.textureDir + "/pressed"]);
                 // we don't want to have the image in the component list, because then the entity.Get<> function becomes much more expensive,
@@ -240,14 +287,17 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                 img.RemoveSelf();
                 block._solid.Add(img);
                 GFX.Game.PopFallback();
-            } else
+            }
+            else
                 orig(self, x, y, tx, ty);
         }
 
-        private static void CassetteBlock_Awake(ILContext il) {
+        private static void CassetteBlock_Awake(ILContext il)
+        {
             ILCursor cursor = new(il);
             // Don't add the BoxSide, as it breaks rendering due to transparency
-            if (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCallvirt<Scene>("Add"))) {
+            if (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCallvirt<Scene>("Add")))
+            {
                 ILLabel afterAdd = cursor.DefineLabel();
 
                 // skip the Add call if this is a wonky cassette
@@ -265,9 +315,11 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             }
         }
 
-        private static void CassetteBlock_ShiftSize(ILContext il) {
+        private static void CassetteBlock_ShiftSize(ILContext il)
+        {
             ILCursor cursor = new(il);
-            if (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCallOrCallvirt<Platform>("MoveV"))) {
+            if (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchCallOrCallvirt<Platform>("MoveV")))
+            {
                 cursor.GotoPrev(MoveType.After, instr => instr.MatchConvR4());
 
                 ILLabel beforeMoveV = cursor.DefineLabel();
@@ -293,7 +345,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
         private static void MoveVWithoutBoost(CassetteBlock self, float amount) => self.MoveV(amount, 0);
 
-        public static void Load() {
+        public static void Load()
+        {
             On.Celeste.CassetteBlock.FindInGroup += NewFindInGroup;
             On.Celeste.CassetteBlock.CheckForSame += NewCheckForSame;
             On.Celeste.CassetteBlock.SetImage += CassetteBlock_SetImage;
@@ -301,7 +354,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             IL.Celeste.CassetteBlock.ShiftSize += CassetteBlock_ShiftSize;
         }
 
-        public static void Unload() {
+        public static void Unload()
+        {
             On.Celeste.CassetteBlock.FindInGroup -= NewFindInGroup;
             On.Celeste.CassetteBlock.CheckForSame -= NewCheckForSame;
             On.Celeste.CassetteBlock.SetImage -= CassetteBlock_SetImage;

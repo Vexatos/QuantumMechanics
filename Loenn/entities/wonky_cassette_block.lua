@@ -1,13 +1,12 @@
-local fakeTilesHelper = require("helpers.fake_tiles")
 local utils = require("utils")
-local matrixLib = require("utils.matrix")
-local drawableSprite = require("structs.drawable_sprite")
 local connectedEntities = require("helpers.connected_entities")
+local mods = require("mods")
+local quantumMechanics = mods.requireFromPlugin("libraries.quantum_mechanics")
 
 local wonkyCassetteBlock = {}
 
 wonkyCassetteBlock.name = "QuantumMechanics/WonkyCassetteBlock"
-wonkyCassetteBlock.minimumSize = {16, 16}
+wonkyCassetteBlock.minimumSize = { 16, 16 }
 wonkyCassetteBlock.fieldInformation = {
     onAtBeats = {
         fieldType = "string",
@@ -26,7 +25,7 @@ wonkyCassetteBlock.fieldInformation = {
     },
     textureDirectory = {
         fieldType = "path",
-        filePickerExtensions = {"png"},
+        filePickerExtensions = { "png" },
         allowMissingPath = true,
         filenameProcessor = function(filename)
             -- Discard leading "Graphics/Atlases/Gameplay/" and file extension
@@ -65,76 +64,8 @@ wonkyCassetteBlock.placements = {
 local function getSearchPredicate(entity)
     local entityKey = string.gsub(entity.onAtBeats, "%s", "")
     return function(target)
-        return entity._name == target._name and entity.controllerIndex == target.controllerIndex and entityKey == string.gsub(target.onAtBeats, "%s", "")
-    end
-end
-
-local function getTileSprite(entity, x, y, frame, color, depth, rectangles)
-    local hasAdjacent = connectedEntities.hasAdjacent
-
-    local drawX, drawY = (x - 1) * 8, (y - 1) * 8
-
-    local closedLeft = hasAdjacent(entity, drawX - 8, drawY, rectangles)
-    local closedRight = hasAdjacent(entity, drawX + 8, drawY, rectangles)
-    local closedUp = hasAdjacent(entity, drawX, drawY - 8, rectangles)
-    local closedDown = hasAdjacent(entity, drawX, drawY + 8, rectangles)
-    local completelyClosed = closedLeft and closedRight and closedUp and closedDown
-
-    local quadX, quadY = false, false
-
-    if completelyClosed then
-        if not hasAdjacent(entity, drawX + 8, drawY - 8, rectangles) then
-            quadX, quadY = 24, 0
-
-        elseif not hasAdjacent(entity, drawX - 8, drawY - 8, rectangles) then
-            quadX, quadY = 24, 8
-
-        elseif not hasAdjacent(entity, drawX + 8, drawY + 8, rectangles) then
-            quadX, quadY = 24, 16
-
-        elseif not hasAdjacent(entity, drawX - 8, drawY + 8, rectangles) then
-            quadX, quadY = 24, 24
-
-        else
-            quadX, quadY = 8, 8
-        end
-    else
-        if closedLeft and closedRight and not closedUp and closedDown then
-            quadX, quadY = 8, 0
-
-        elseif closedLeft and closedRight and closedUp and not closedDown then
-            quadX, quadY = 8, 16
-
-        elseif closedLeft and not closedRight and closedUp and closedDown then
-            quadX, quadY = 16, 8
-
-        elseif not closedLeft and closedRight and closedUp and closedDown then
-            quadX, quadY = 0, 8
-
-        elseif closedLeft and not closedRight and not closedUp and closedDown then
-            quadX, quadY = 16, 0
-
-        elseif not closedLeft and closedRight and not closedUp and closedDown then
-            quadX, quadY = 0, 0
-
-        elseif not closedLeft and closedRight and closedUp and not closedDown then
-            quadX, quadY = 0, 16
-
-        elseif closedLeft and not closedRight and closedUp and not closedDown then
-            quadX, quadY = 16, 16
-        end
-    end
-
-    if quadX and quadY then
-        local sprite = drawableSprite.fromTexture(frame, entity)
-
-        sprite:addPosition(drawX, drawY)
-        sprite:useRelativeQuad(quadX, quadY, 8, 8)
-        sprite:setColor(color)
-
-        sprite.depth = depth
-
-        return sprite
+        return entity._name == target._name and entity.controllerIndex == target.controllerIndex and
+            entityKey == string.gsub(target.onAtBeats, "%s", "")
     end
 end
 
@@ -156,7 +87,7 @@ function wonkyCassetteBlock.sprite(room, entity)
 
     for x = 1, tileWidth do
         for y = 1, tileHeight do
-            local sprite = getTileSprite(entity, x, y, frame, color, depth, rectangles)
+            local sprite = quantumMechanics.getTileSprite(entity, x, y, frame, color, depth, rectangles)
 
             if sprite then
                 table.insert(sprites, sprite)
