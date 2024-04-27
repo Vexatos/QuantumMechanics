@@ -31,3 +31,16 @@ entities.QuantumMechanics/WonkyFlag.attributes.description.flag=The flag to acti
 entities.QuantumMechanics/WonkyFlag.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which the flag should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
 entities.QuantumMechanics/WonkyFlag.attributes.description.controllerIndex=The index of the controller that controls this flag. Must be 0 or greater. 0 refers to the main controller.
 entities.QuantumMechanics/WonkyFlag.attributes.description.invert=Whether to invert all flag logic, deactivating on beat and activating off beat.
+
+# Wonky Cassette Zip Mover
+entities.QuantumMechanics/WonkyCassetteZipMover.placements.name.zipmover=Wonky Cassette Zip Mover
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which this block should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.color=The hexadecimal colour code of this block.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.textureDirectory=The path to the folder containing two textures for this block, starting from Graphics/Atlases/Gameplay/.\nIn order for this to work, the specified folder must containing two image files named "solid.png" and "pressed.png", each corresponding to the texture of the block when activated and deactivated respectively. Preferably without the "/" symbol at the end.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.boostFrames=The number of frames after activation that a cassette boost is possible for. Must be at least 1 to be active.\nIf set to -1 (default), will use boost frame count from the controller.\nIf it is set to 0, cassette boosts will not be possible off of this block.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.controllerIndex=The index of the controller that controls this cassette block. Must be 0 or greater. 0 refers to the main controller.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.noReturn=Whether the Cassette Zip Mover should return to its starting point or not.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.permanent=Whether this block should lock in place after being triggered.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.waiting=Whether this block requires the player to trigger it each node in the path.
+entities.QuantumMechanics/WonkyCassetteZipMover.attributes.description.ticking=Causes this block to tick 5 times at every node before going back to its starting point, unless the player triggers it again. If `permanent` is true and the player doesn't trigger the Zip Mover in time, it'll lock in place.
+

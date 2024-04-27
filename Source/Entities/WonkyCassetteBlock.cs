@@ -31,7 +31,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
         public List<Image> _pressed, _solid; // we'll use these instead of pressed and solid, to make `UpdateVisualState` not enumerate through them for no reason.
 
-        public bool lonely = false; // if true, won't connect to any wonky cassette blocks other than itself
+        public bool Lonely = false; // if true, won't connect to any wonky cassette blocks other than itself
 
         public WonkyCassetteBlock(Vector2 position, EntityID id, float width, float height, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex)
             : base(position, id, width, height, index, 1.0f)
@@ -52,7 +52,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             ControllerIndex = controllerIndex;
 
-            Key = $"{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}";
+            Key = $"{id.ID}|{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}";
 
             _pressed = new();
             _solid = new();
@@ -86,7 +86,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             WonkyCassetteBlock selfCast = (WonkyCassetteBlock)self;
 
-            if (selfCast.lonely)
+            if (selfCast.Lonely)
                 return;
 
             foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
@@ -95,7 +95,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                     entity.ControllerIndex == selfCast.ControllerIndex &&
                     (entity.CollideRect(new Rectangle((int)block.X - 1, (int)block.Y, (int)block.Width + 2, (int)block.Height))
                         || entity.CollideRect(new Rectangle((int)block.X, (int)block.Y - 1, (int)block.Width, (int)block.Height + 2))) &&
-                    !self.group.Contains(entity) && entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats))
+                    !self.group.Contains(entity) && entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats) && !entity.Lonely)
                 {
                     self.group.Add(entity);
                     NewFindInGroup(orig, self, entity);
@@ -190,6 +190,25 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             Activated = false;
         }
 
+        private static void IndexConnectionsForBlock(Rectangle bounds, Rectangle tileBounds, Entity entity, ref bool[,] connection)
+        {
+            for (float x = entity.Left; x < entity.Right; x += 8f)
+            {
+                for (float y = entity.Top; y < entity.Bottom; y += 8f)
+                {
+                    int ix = ((int)x - bounds.Left) / 8 + 1;
+                    int iy = ((int)y - bounds.Top) / 8 + 1;
+
+                    if (ix < 0) ix = 0;
+                    else if (ix > tileBounds.Width) ix = tileBounds.Width + 1;
+                    if (iy < 0) iy = 0;
+                    else if (iy > tileBounds.Height) iy = tileBounds.Height + 1;
+
+                    connection[ix, iy] = true;
+                }
+            }
+        }
+
         private static void IndexConnections(Level level)
         {
             LevelData levelData = level.Session.LevelData;
@@ -198,27 +217,23 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             foreach (WonkyCassetteBlock entity in level.Tracker.GetEntities<WonkyCassetteBlock>())
             {
-                bool[,] connection;
-
-                if (!Connections.TryGetValue(entity.Key, out connection))
+                if (entity.Lonely)
                 {
-                    Connections.Add(entity.Key, connection = new bool[tileBounds.Width + 2, tileBounds.Height + 2]);
+                    Connections.Remove(entity.Key);
+                    bool[,] blockConnections = new bool[tileBounds.Width + 2, tileBounds.Height + 2];
+                    IndexConnectionsForBlock(bounds, tileBounds, entity, ref blockConnections);
+                    Connections.Add(entity.Key, blockConnections);
                 }
-
-                for (float x = entity.Left; x < entity.Right; x += 8f)
+                else
                 {
-                    for (float y = entity.Top; y < entity.Bottom; y += 8f)
+                    bool[,] connection;
+
+                    if (!Connections.TryGetValue(entity.Key, out connection))
                     {
-                        int ix = ((int)x - bounds.Left) / 8 + 1;
-                        int iy = ((int)y - bounds.Top) / 8 + 1;
-
-                        if (ix < 0) ix = 0;
-                        else if (ix > tileBounds.Width) ix = tileBounds.Width + 1;
-                        if (iy < 0) iy = 0;
-                        else if (iy > tileBounds.Height) iy = tileBounds.Height + 1;
-
-                        connection[ix, iy] = true;
+                        Connections.Add(entity.Key, connection = new bool[tileBounds.Width + 2, tileBounds.Height + 2]);
                     }
+
+                    IndexConnectionsForBlock(bounds, tileBounds, entity, ref connection);
                 }
             }
         }
@@ -230,9 +245,6 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             WonkyCassetteBlock selfCast = (WonkyCassetteBlock)self;
 
-            if (selfCast.lonely)
-                return self.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8)); // we *should* precalculate this and im pretty sure thats what IndexConnections does but  im too tired for index math rn
-
             bool[,] connection;
 
             if (!Connections.TryGetValue(selfCast.Key, out connection))
@@ -240,8 +252,9 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                 // Fallback just in case
                 foreach (WonkyCassetteBlock entity in self.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
                 {
-
-                    if (entity.Index == self.Index && entity.ControllerIndex == selfCast.ControllerIndex &&
+                    if (selfCast.Lonely)
+                        return self.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8));
+                    else if (entity.Index == self.Index && entity.ControllerIndex == selfCast.ControllerIndex &&
                         entity.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8)) &&
                         entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats))
                     {

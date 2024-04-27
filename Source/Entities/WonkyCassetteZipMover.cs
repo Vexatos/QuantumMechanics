@@ -1,13 +1,8 @@
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using Mono.Cecil.Cil;
 using Monocle;
-using MonoMod.Cil;
-using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.QuantumMechanics.Entities
 {
@@ -230,7 +225,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
         public WonkyCassetteZipMover(Vector2 position, EntityID id, int width, int height, Vector2[] nodes, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex, bool noReturn, bool perm, bool waits, bool ticking)
             : base(position, id, width, height, index, moveSpec, color, textureDir, overrideBoostFrames, controllerIndex)
         {
-            this.lonely = true;
+            this.Lonely = true;
 
             this.noReturn = noReturn;
             this.permanent = perm;
@@ -376,7 +371,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                     to = nodes[i];
 
                     // Start shaking.
-                    // sfx.Play(CustomSFX.game_zipMover_normal_start);
+                    sfx.Play(QuantumMechanicsSFX.game_zipMover_normal_start);
                     Input.Rumble(RumbleStrength.Medium, RumbleLength.Short);
                     StartShaking(0.1f);
                     yield return 0.1f;
@@ -403,7 +398,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
                     // Arrived, will wait for 0.5 secs.
                     StartShaking(0.2f);
-                    // Audio.Play(CustomSFX.game_zipMover_normal_impact, Center);
+                    Audio.Play(QuantumMechanicsSFX.game_zipMover_normal_impact, Center);
                     Input.Rumble(RumbleStrength.Strong, RumbleLength.Medium);
                     SceneAs<Level>().Shake();
                     StopPlayerRunIntoAnimation = true;
@@ -424,7 +419,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                             {
                                 tickTime = 0.0f;
                                 tickNum++;
-                                // sfx.Play(CustomSFX.game_zipMover_normal_tick);
+                                sfx.Play(QuantumMechanicsSFX.game_zipMover_normal_tick);
                                 StartShaking(0.1f);
                             }
                         }
@@ -457,7 +452,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                             // Goes back to start with a speed that is four times slower.
                             StopPlayerRunIntoAnimation = false;
                             //streetlight.SetAnimationFrame(2);
-                            // sfx.Play(CustomSFX.game_zipMover_normal_return);
+                            sfx.Play(QuantumMechanicsSFX.game_zipMover_normal_return);
                             at = 0f;
                             while (at < 1f)
                             {
@@ -474,7 +469,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                                 from = nodes[i];
 
                             StartShaking(0.2f);
-                            // Audio.Play(CustomSFX.game_zipMover_normal_finish, Center);
+                            Audio.Play(QuantumMechanicsSFX.game_zipMover_normal_finish, Center);
                         }
                     }
                     StopPlayerRunIntoAnimation = true;
@@ -486,8 +481,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                 {
                     // Done, will never be activated again.
                     StartShaking(0.3f);
-                    // Audio.Play(CustomSFX.game_zipMover_normal_finish, Center);
-                    // Audio.Play(CustomSFX.game_zipMover_normal_tick, Center);
+                    Audio.Play(QuantumMechanicsSFX.game_zipMover_normal_finish, Center);
+                    Audio.Play(QuantumMechanicsSFX.game_zipMover_normal_tick, Center);
                     SceneAs<Level>().Shake(0.15f);
                     while (true)
                         yield return null;

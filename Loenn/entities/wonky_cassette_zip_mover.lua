@@ -52,7 +52,7 @@ wonkyCassetteZipMover.fieldInformation = {
     }
 }
 wonkyCassetteZipMover.placements = {
-    name = "block",
+    name = "zipmover",
     data = {
         width = 16,
         height = 16,
