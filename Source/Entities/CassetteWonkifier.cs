@@ -30,23 +30,28 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             Add(new WonkyCassetteListener(id, controllerIndex) {
                 ShouldBeActive = currentBeatIndex => OnAtBeats.Contains(currentBeatIndex),
-                OnStart = activated => ForAllCassetteBlocks(block => block.SetActivatedSilently(activated)),
-                OnStop = () => ForAllCassetteBlocks(block => block.Finish()),
-                OnWillActivate = () => ForAllCassetteBlocks(block => block.WillToggle()),
-                OnWillDeactivate = () => ForAllCassetteBlocks(block => block.WillToggle()),
-                OnActivated = () => ForAllCassetteBlocks(block => block.Activated = true),
-                OnDeactivated = () => ForAllCassetteBlocks(block => block.Activated = false),
-                FreezeUpdate = Update
+                OnStart = activated => ForAllCassetteBlocks(block => block.SetActivatedSilently(activated), listener => listener.Start(activated)),
+                OnStop = () => ForAllCassetteBlocks(block => block.Finish(), listener => listener.Finish()),
+                OnWillActivate = () => ForAllCassetteBlocks(block => block.WillToggle(), listener => listener.WillToggle()),
+                OnWillDeactivate = () => ForAllCassetteBlocks(block => block.WillToggle(), listener => listener.WillToggle()),
+                OnActivated = () => ForAllCassetteBlocks(block => block.Activated = true, listener => listener.SetActivated(true)),
+                OnDeactivated = () => ForAllCassetteBlocks(block => block.Activated = false, listener => listener.SetActivated(false))
             });
         }
 
         public CassetteWonkifier(EntityData data, Vector2 offset, EntityID id)
             : this(data.Position + offset, id, data.Attr("onAtBeats"), data.Int("cassetteIndex", 0), data.Int("controllerIndex", 0)) { }
 
-        private void ForAllCassetteBlocks(Action<CassetteBlock> action) {
+        private void ForAllCassetteBlocks(Action<CassetteBlock> blockAction, Action<CassetteListener> listenerAction) {
             foreach (CassetteBlock block in base.Scene.Tracker.GetEntities<CassetteBlock>()) {
                 if (block.Index == this.CassetteIndex) {
-                    action.Invoke(block);
+                    blockAction?.Invoke(block);
+                }
+            }
+
+            foreach (CassetteListener listener in base.Scene.Tracker.GetComponents<CassetteListener>()) {
+                if (listener.Index == this.CassetteIndex) {
+                    listenerAction?.Invoke(listener);
                 }
             }
         }
