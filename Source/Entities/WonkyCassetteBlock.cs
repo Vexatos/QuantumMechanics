@@ -246,23 +246,14 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             foreach (WonkyCassetteBlock entity in level.Tracker.GetEntities<WonkyCassetteBlock>())
             {
-                if (entity.Lonely)
-                {
-                    bool[,] blockConnections = new bool[tileBounds.Width + 2, tileBounds.Height + 2];
-                    IndexConnectionsForBlock(bounds, tileBounds, entity, ref blockConnections);
-                    Connections.Add(entity.Key, blockConnections);
-                }
-                else
-                {
-                    bool[,] connection;
+                bool[,] connection;
 
-                    if (!Connections.TryGetValue(entity.Key, out connection))
-                    {
-                        Connections.Add(entity.Key, connection = new bool[tileBounds.Width + 2, tileBounds.Height + 2]);
-                    }
-
-                    IndexConnectionsForBlock(bounds, tileBounds, entity, ref connection);
+                if (!Connections.TryGetValue(entity.Key, out connection))
+                {
+                    Connections.Add(entity.Key, connection = new bool[tileBounds.Width + 2, tileBounds.Height + 2]);
                 }
+
+                IndexConnectionsForBlock(bounds, tileBounds, entity, ref connection);
             }
         }
 
@@ -401,7 +392,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             orig(self);
             if (self is WonkyCassetteBlock block)
             {
-                block?.HandleUpdateVisualState();
+                block.HandleUpdateVisualState();
             }
         }
 

@@ -8,8 +8,6 @@ using System.Collections.Generic;
 
 namespace Celeste.Mod.QuantumMechanics.Entities
 {
-    // fix the centre sprites doin weird shit (why the fuck is the cross always there)
-
     [CustomEntity("QuantumMechanics/WonkyCassetteMoveBlock")]
     [TrackedAs(typeof(WonkyCassetteBlock))]
     public class WonkyCassetteMoveBlock : WonkyCassetteBlock
