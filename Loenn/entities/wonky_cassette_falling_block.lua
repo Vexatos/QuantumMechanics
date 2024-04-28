@@ -2,11 +2,11 @@ local utils = require("utils")
 local mods = require("mods")
 local quantumMechanics = mods.requireFromPlugin("libraries.quantum_mechanics")
 
-local wonkyCassetteBlock = {}
+local wonkyCassetteFallingBlock = {}
 
-wonkyCassetteBlock.name = "QuantumMechanics/WonkyCassetteBlock"
-wonkyCassetteBlock.minimumSize = { 16, 16 }
-wonkyCassetteBlock.fieldInformation = {
+wonkyCassetteFallingBlock.name = "QuantumMechanics/WonkyCassetteFallingBlock"
+wonkyCassetteFallingBlock.minimumSize = { 16, 16 }
+wonkyCassetteFallingBlock.fieldInformation = {
     onAtBeats = {
         fieldType = "string",
         validator = function(str)
@@ -46,8 +46,8 @@ wonkyCassetteBlock.fieldInformation = {
         minimumValue = 0
     }
 }
-wonkyCassetteBlock.placements = {
-    name = "block",
+wonkyCassetteFallingBlock.placements = {
+    name = "fallingblock",
     data = {
         width = 16,
         height = 16,
@@ -59,8 +59,8 @@ wonkyCassetteBlock.placements = {
     }
 }
 
-function wonkyCassetteBlock.sprite(room, entity)
+function wonkyCassetteFallingBlock.sprite(room, entity)
     return quantumMechanics.getCassetteBlockSprites(room, entity, false)
 end
 
-return wonkyCassetteBlock
+return wonkyCassetteFallingBlock

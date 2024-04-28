@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
 
 namespace Celeste.Mod.QuantumMechanics;
 
@@ -22,5 +23,38 @@ public static class Extensions
         int right = (int)camera.Right;
 
         return new(left, top, right - left, bottom - top);
+    }
+
+    public static MoveBlock.Directions Direction(this Vector2 vec)
+    {
+        vec = vec.SafeNormalize();
+
+        if (vec.X > 0)
+        {
+            return MoveBlock.Directions.Right;
+        }
+        else if (vec.X < 0)
+        {
+            return MoveBlock.Directions.Left;
+        }
+        else if (vec.Y < 0)
+        {
+            return MoveBlock.Directions.Up;
+        }
+        else
+        {
+            return MoveBlock.Directions.Down;
+        }
+    }
+
+    public static float Angle(this MoveBlock.Directions dir)
+    {
+        return dir switch
+        {
+            MoveBlock.Directions.Left => (float)Math.PI,
+            MoveBlock.Directions.Up => -(float)Math.PI / 2f,
+            MoveBlock.Directions.Down => (float)Math.PI / 2f,
+            _ => 0f
+        };
     }
 }

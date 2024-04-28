@@ -122,32 +122,16 @@ local function getZipMoverNodeSprites(x, y, width, height, nodes, cogTexture, co
 end
 
 function wonkyCassetteZipMover.sprite(room, entity)
-    local sprites = {}
-
     local x, y = entity.x or 0, entity.y or 0
     local width, height = entity.width or 32, entity.height or 32
-    local tileWidth, tileHeight = math.ceil(width / 8), math.ceil(height / 8)
 
-    local color = entity.color or "FFFFFF"
-    local frame = (entity.textureDirectory or "objects/cassetteblock") .. "/solid"
-    local depth = -10
-
-    local rectangles = connectedEntities.getEntityRectangles({ entity })
-
-    for x = 1, tileWidth do
-        for y = 1, tileHeight do
-            local sprite = quantumMechanics.getTileSprite(entity, x, y, frame, color, depth, rectangles)
-
-            if sprite then
-                table.insert(sprites, sprite)
-            end
-        end
-    end
+    local sprites = quantumMechanics.getCassetteBlockSprites(room, entity, true)
 
     local halfWidth, halfHeight = math.floor(width / 2), math.floor(height / 2)
     local centerX, centerY = x + halfWidth, y + halfHeight
 
-    local ropeColor = (entity.customColor ~= "" and color) or ropeColors[1]
+    local color = entity.color or "FFFFFF"
+    local ropeColor = color or ropeColors[1]
 
     local nodes = entity.nodes or { { x = 0, y = 0 } }
     local nodeSprites = getZipMoverNodeSprites(x, y, width, height, nodes,
@@ -158,7 +142,7 @@ function wonkyCassetteZipMover.sprite(room, entity)
     end
 
     if entity.noReturn then
-        local cross = drawableSprite.fromTexture("objects/QuantumMechanics/wonkyCassetteZipMover/x")
+        local cross = drawableSprite.fromTexture("objects/QuantumMechanics/x")
         cross:setPosition(centerX, centerY)
         cross:setColor(color)
         cross.depth = -11

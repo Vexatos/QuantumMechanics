@@ -25,17 +25,23 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
         private string textureDir;
 
-        private readonly string Key;
+        private string Key;
 
         public static readonly Dictionary<string, bool[,]> Connections = new(StringComparer.Ordinal);
 
-        public List<Image> _pressed, _solid; // we'll use these instead of pressed and solid, to make `UpdateVisualState` not enumerate through them for no reason.
+        private List<Image> _pressed, _solid; // we'll use these instead of pressed and solid, to make `UpdateVisualState` not enumerate through them for no reason.
 
-        public bool Lonely = false; // if true, won't connect to any wonky cassette blocks other than itself
+        protected bool Lonely = false; // if true, won't connect to any wonky cassette blocks other than itself
 
-        public WonkyCassetteBlock(Vector2 position, EntityID id, float width, float height, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex)
+        protected Vector2 blockOffset => Vector2.UnitY * (2 - blockHeight);
+
+        protected Color pressedColor => color.Mult(Calc.HexToColor("667da5"));
+
+        public WonkyCassetteBlock(Vector2 position, EntityID id, float width, float height, bool lonely, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex)
             : base(position, id, width, height, index, 1.0f)
         {
+            Lonely = lonely;
+
             Tag = Tags.FrozenUpdate | Tags.TransitionUpdate;
 
             OnAtBeats = OnAtBeatsSplitRegex.Split(moveSpec).Select(s => int.Parse(s) - 1).ToArray();
@@ -47,12 +53,12 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
             OverrideBoostFrames = overrideBoostFrames;
 
+            Key = Lonely ? $"{id.ID}|{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}" : $"{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}";
+
             if (controllerIndex < 0)
                 throw new ArgumentException($"Controller Index must be 0 or greater, but is set to {controllerIndex}.");
 
             ControllerIndex = controllerIndex;
-
-            Key = $"{id.ID}|{Index}|{ControllerIndex}|{string.Join(",", OnAtBeats)}";
 
             _pressed = new();
             _solid = new();
@@ -71,7 +77,27 @@ namespace Celeste.Mod.QuantumMechanics.Entities
         }
 
         public WonkyCassetteBlock(EntityData data, Vector2 offset, EntityID id)
-            : this(data.Position + offset, id, data.Width, data.Height, data.Int("index"), data.Attr("onAtBeats"), data.HexColor("color"), data.Attr("textureDirectory", "objects/cassetteblock").TrimEnd('/'), data.Int("boostFrames", -1), data.Int("controllerIndex", 0)) { }
+            : this(data.Position + offset, id, data.Width, data.Height, false, data.Int("index"), data.Attr("onAtBeats"), data.HexColor("color"), data.Attr("textureDirectory", "objects/cassetteblock").TrimEnd('/'), data.Int("boostFrames", -1), data.Int("controllerIndex", 0)) { }
+
+        protected void AddCenterSymbol(Image solid, Image pressed)
+        {
+            _solid.Add(solid);
+            _pressed.Add(pressed);
+            Vector2 origin = groupOrigin - Position;
+            Vector2 size = new(Width, Height);
+
+            Vector2 half = (size - new Vector2(solid.Width, solid.Height)) * 0.5f;
+            solid.Origin = origin - half;
+            solid.Position = origin;
+            solid.Color = color;
+            Add(solid);
+
+            half = (size - new Vector2(pressed.Width, pressed.Height)) * 0.5f;
+            pressed.Origin = origin - half;
+            pressed.Position = origin;
+            pressed.Color = color;
+            Add(pressed);
+        }
 
         // We need to reimplement some of our parent's methods because they refer directly to CassetteBlock when fetching entities
 
@@ -173,7 +199,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
                 foreach (Image item in images)
                 {
-                    item.Texture.Draw(item.Position + Position, item.Origin, item.Color, item.Scale, item.Rotation, item.Effects);
+                    if (item.Visible)
+                    {
+                        item.Texture.Draw(item.Position + Position, item.Origin, item.Color, item.Scale, item.Rotation, item.Effects);
+                    }
                 }
             }
         }
@@ -219,7 +248,6 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             {
                 if (entity.Lonely)
                 {
-                    Connections.Remove(entity.Key);
                     bool[,] blockConnections = new bool[tileBounds.Width + 2, tileBounds.Height + 2];
                     IndexConnectionsForBlock(bounds, tileBounds, entity, ref blockConnections);
                     Connections.Add(entity.Key, blockConnections);
@@ -236,6 +264,21 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                     IndexConnectionsForBlock(bounds, tileBounds, entity, ref connection);
                 }
             }
+        }
+
+        protected virtual void HandleUpdateVisualState()
+        {
+            foreach (StaticMover staticMover in staticMovers)
+            {
+                staticMover.Visible = Visible;
+            }
+        }
+
+        private static void Platform_EnableStaticMovers(On.Celeste.Platform.orig_EnableStaticMovers orig, Platform self)
+        {
+            if (self is WonkyCassetteBlock && !self.Visible)
+                return;
+            orig(self);
         }
 
         private static bool NewCheckForSame(On.Celeste.CassetteBlock.orig_CheckForSame origCheckForSame, CassetteBlock self, float x, float y)
@@ -353,6 +396,15 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             }
         }
 
+        private static void CassetteBlock_UpdateVisualState(On.Celeste.CassetteBlock.orig_UpdateVisualState orig, CassetteBlock self)
+        {
+            orig(self);
+            if (self is WonkyCassetteBlock block)
+            {
+                block?.HandleUpdateVisualState();
+            }
+        }
+
         private static bool IsWonky(Scene scene, object side, CassetteBlock self) => self is WonkyCassetteBlock;
         private static bool IsWonkyWithoutBoost(CassetteBlock self) => self is WonkyCassetteBlock block && block.OverrideBoostFrames == 0;
 
@@ -363,6 +415,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             On.Celeste.CassetteBlock.FindInGroup += NewFindInGroup;
             On.Celeste.CassetteBlock.CheckForSame += NewCheckForSame;
             On.Celeste.CassetteBlock.SetImage += CassetteBlock_SetImage;
+            On.Celeste.CassetteBlock.UpdateVisualState += CassetteBlock_UpdateVisualState;
+            On.Celeste.Platform.EnableStaticMovers += Platform_EnableStaticMovers;
             IL.Celeste.CassetteBlock.Awake += CassetteBlock_Awake;
             IL.Celeste.CassetteBlock.ShiftSize += CassetteBlock_ShiftSize;
         }
@@ -372,6 +426,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             On.Celeste.CassetteBlock.FindInGroup -= NewFindInGroup;
             On.Celeste.CassetteBlock.CheckForSame -= NewCheckForSame;
             On.Celeste.CassetteBlock.SetImage -= CassetteBlock_SetImage;
+            On.Celeste.CassetteBlock.UpdateVisualState -= CassetteBlock_UpdateVisualState;
+            On.Celeste.Platform.EnableStaticMovers -= Platform_EnableStaticMovers;
             IL.Celeste.CassetteBlock.Awake -= CassetteBlock_Awake;
             IL.Celeste.CassetteBlock.ShiftSize -= CassetteBlock_ShiftSize;
         }

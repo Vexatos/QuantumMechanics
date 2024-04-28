@@ -177,14 +177,6 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                 foreach (Segment seg in segments)
                     seg.Seen = cameraBounds.Intersects(seg.Bounds);
 
-                for (int i = 1; i <= zipMover.blockHeight; ++i)
-                {
-                    Vector2 o = new(0, i + zipMover.blockOffset.Y);
-                    foreach (Segment seg in segments)
-                        if (seg.Seen)
-                            seg.Render(zipMover.percent, o, undersideColor, undersideColor);
-                }
-
                 foreach (Segment seg in segments)
                     if (seg.Seen)
                         seg.Render(zipMover.percent, zipMover.blockOffset, color, lightColor);
@@ -193,16 +185,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities
                 MTexture cogTex = on ? cog : cogPressed;
                 foreach (Vector2 node in nodes)
                 {
-                    for (int i = 1; i <= zipMover.blockHeight; ++i)
-                    {
-                        Vector2 o = new(0, i + zipMover.blockOffset.Y);
-                        cogWhite.DrawCentered(node + o, undersideColor, 1f, rotation);
-                    }
                     cogTex.DrawCentered(node + zipMover.blockOffset, zipMover.color, 1f, rotation);
                 }
             }
         }
-        protected Vector2 blockOffset => Vector2.UnitY * (2 - blockHeight);
 
         private PathRenderer pathRenderer;
 
@@ -223,12 +209,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities
         private static MTexture cog, cogPressed, cogWhite;
 
         public WonkyCassetteZipMover(Vector2 position, EntityID id, int width, int height, Vector2[] nodes, int index, string moveSpec, Color color, string textureDir, int overrideBoostFrames, int controllerIndex, bool noReturn, bool perm, bool waits, bool ticking)
-            : base(position, id, width, height, index, moveSpec, color, textureDir, overrideBoostFrames, controllerIndex)
+            : base(position, id, width, height, true, index, moveSpec, color, textureDir, overrideBoostFrames, controllerIndex)
         {
-            this.Lonely = true;
-
             this.noReturn = noReturn;
-            this.permanent = perm;
+            permanent = perm;
             this.waits = waits;
             this.ticking = ticking;
 
@@ -251,8 +235,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities
 
         public override void Awake(Scene scene)
         {
-            Image cross = new(GFX.Game["objects/QuantumMechanics/wonkyCassetteZipMover/x"]);
-            Image crossPressed = new(GFX.Game["objects/QuantumMechanics/wonkyCassetteZipMover/xPressed"]);
+            Image cross = new(GFX.Game["objects/QuantumMechanics/x"]);
+            Image crossPressed = new(GFX.Game["objects/QuantumMechanics/xPressed"]);
 
             base.Awake(scene);
             if (noReturn)
@@ -278,28 +262,6 @@ namespace Celeste.Mod.QuantumMechanics.Entities
             Position += Shake;
             base.Render();
             Position = position;
-        }
-
-        protected void AddCenterSymbol(Image solid, Image pressed)
-        {
-            _solid.Add(solid);
-            _pressed.Add(pressed);
-            Vector2 origin = groupOrigin - Position;
-            Vector2 size = new(Width, Height);
-
-            Vector2 half = (size - new Vector2(solid.Width, solid.Height)) * 0.5f;
-            solid.Origin = origin - half;
-            solid.Position = origin;
-            solid.Color = color;
-            Add(solid);
-            all.Add(solid);
-
-            half = (size - new Vector2(pressed.Width, pressed.Height)) * 0.5f;
-            pressed.Origin = origin - half;
-            pressed.Position = origin;
-            pressed.Color = color;
-            Add(pressed);
-            all.Add(pressed);
         }
 
         private void ScrapeParticlesCheck(Vector2 to)
