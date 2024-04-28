@@ -5,7 +5,9 @@ using Monocle;
 using MonoMod.Cil;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using MonoMod.RuntimeDetour;
 
 namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyCassetteBlockController")]
@@ -291,18 +293,29 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             }
         }
 
+        private static Hook hook_Level_get_ShouldCreateCassetteManager;
+
         public static void Load() {
             On.Celeste.Level.LoadLevel += Level_LoadLevel;
             IL.Monocle.Engine.Update += Engine_Update;
+
+            hook_Level_get_ShouldCreateCassetteManager = new Hook(
+                typeof(Level).GetProperty("ShouldCreateCassetteManager", BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod(nonPublic: true),
+                Level_get_ShouldCreateCassetteManager
+            );
         }
 
         public static void Unload() {
             On.Celeste.Level.LoadLevel -= Level_LoadLevel;
             IL.Monocle.Engine.Update -= Engine_Update;
+
+            hook_Level_get_ShouldCreateCassetteManager.Dispose();
         }
 
         private static void Level_LoadLevel(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
+            // Various cache clears
             WonkyCassetteBlock.Connections.Clear();
+            CheckedForWonkyController = false;
 
             orig(self, playerIntro, isFromLoader);
 
@@ -357,6 +370,29 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             foreach (WonkyCassetteListener wonkyListener in components) {
                 wonkyListener.FreezeUpdate?.Invoke();
             }
+        }
+
+        private static bool CheckedForWonkyController = false;
+        private static bool hasWonkyController = false;
+
+        private delegate bool orig_Level_get_ShouldCreateCassetteManager(Level self);
+        private static bool Level_get_ShouldCreateCassetteManager(orig_Level_get_ShouldCreateCassetteManager orig, Level self) {
+            if (!CheckedForWonkyController) {
+                foreach (EntityData entityData in self.Session.LevelData.Entities) {
+                    if (entityData.Name == "QuantumMechanics/WonkyCassetteBlockController") {
+                        hasWonkyController = true;
+                        break;
+                    }
+                }
+
+                CheckedForWonkyController = true;
+            }
+
+            if (hasWonkyController) {
+                return false;
+            }
+
+            return orig(self);
         }
     }
 }

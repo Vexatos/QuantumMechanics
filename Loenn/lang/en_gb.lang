@@ -31,3 +31,12 @@ entities.QuantumMechanics/WonkyFlag.attributes.description.flag=The flag to acti
 entities.QuantumMechanics/WonkyFlag.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which the flag should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
 entities.QuantumMechanics/WonkyFlag.attributes.description.controllerIndex=The index of the controller that controls this flag. Must be 0 or greater. 0 refers to the main controller.
 entities.QuantumMechanics/WonkyFlag.attributes.description.invert=Whether to invert all flag logic, deactivating on beat and activating off beat.
+
+# Cassette Wonkifier
+entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_0=Cassette Wonkifier (0 - Blue)
+entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_1=Cassette Wonkifier (1 - Rose)
+entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_2=Cassette Wonkifier (2 - Bright Sun)
+entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_3=Cassette Wonkifier (3 - Malachite)
+entities.QuantumMechanics/CassetteWonkifier.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which blocks with matching index should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
+entities.QuantumMechanics/CassetteWonkifier.attributes.description.cassetteIndex=The colour of the cassette blocks to control.
+entities.QuantumMechanics/CassetteWonkifier.attributes.description.controllerIndex=The index of the controller that controls this cassette index. Must be 0 or greater. 0 refers to the main controller.

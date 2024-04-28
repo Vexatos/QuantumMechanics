@@ -2,6 +2,8 @@
 
 Mod with funny mechanics ported from Strawberry Jam 2021.
 
+The feature list, builds and changelogs are available on [GameBanana](https://gamebanana.com/mods/502051).
+
 ## License
 
 The project's source code and assets, other than the exceptions stated below, are developed and licensed under the [MIT license](LICENSE).
