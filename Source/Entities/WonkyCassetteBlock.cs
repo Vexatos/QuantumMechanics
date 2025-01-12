@@ -6,15 +6,12 @@ using MonoMod.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyCassetteBlock")]
     [Tracked]
     public class WonkyCassetteBlock : CassetteBlock {
-        private static readonly Regex OnAtBeatsSplitRegex = new(@",\s*", RegexOptions.Compiled);
-
-        private readonly int[] OnAtBeats;
+        private int[] OnAtBeats;
         private readonly int ControllerIndex;
 
         private readonly int OverrideBoostFrames;
@@ -33,8 +30,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
             : base(position, id, width, height, index, 1.0f) {
             Tag = Tags.FrozenUpdate | Tags.TransitionUpdate;
 
-            OnAtBeats = OnAtBeatsSplitRegex.Split(moveSpec).Select(s => int.Parse(s) - 1).ToArray();
-            Array.Sort(OnAtBeats);
+            OnAtBeats = Utilities.OnAtBeats(moveSpec);
 
             base.color = color;
 
@@ -201,7 +197,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                     if (entity.Index == self.Index && entity.ControllerIndex == selfCast.ControllerIndex &&
                         entity.Collider.Collide(new Rectangle((int) x, (int) y, 8, 8)) &&
                         entity.OnAtBeats.SequenceEqual(selfCast.OnAtBeats)) {
-                        return true;                        
+                        return true;
                     }
                 }
 

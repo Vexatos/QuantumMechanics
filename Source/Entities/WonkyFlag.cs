@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -10,9 +9,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyFlag")]
     [Tracked]
     public class WonkyFlag : Entity {
-        private static readonly Regex OnAtBeatsSplitRegex = new(@",\s*", RegexOptions.Compiled);
-
-        private readonly int[] OnAtBeats;
+        private int[] OnAtBeats;
         private readonly string Flag;
         private readonly bool Invert;
 
@@ -24,8 +21,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         public WonkyFlag(Vector2 position, EntityID id, string flag, string moveSpec, int controllerIndex, bool invert) 
             : base(position) {
 
-            OnAtBeats = OnAtBeatsSplitRegex.Split(moveSpec).Select(s => int.Parse(s) - 1).ToArray();
-            Array.Sort(OnAtBeats);
+            OnAtBeats = Utilities.OnAtBeats(moveSpec);
 
             Flag = flag;
             Invert = invert;

@@ -40,3 +40,9 @@ entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_3=Cassette
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which blocks with matching index should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.cassetteIndex=The colour of the cassette blocks to control.
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.controllerIndex=The index of the controller that controls this cassette index. Must be 0 or greater. 0 refers to the main controller.
+
+# Wonky Sticky Thing
+entities.QuantumMechanics/WonkyStickyThing.placements.name.sticky_thing=Wonky Sticky Thing
+entities.QuantumMechanics/WonkyFlag.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which the entities attached to this should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
+entities.QuantumMechanics/WonkyFlag.attributes.description.controllerIndex=The index of the controller that controls the attached entities. Must be 0 or greater. 0 refers to the main controller.
+entities.QuantumMechanics/WonkyFlag.attributes.description.color=The hexadecimal colour code of entities attached to this.
