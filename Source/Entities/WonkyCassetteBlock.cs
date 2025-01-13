@@ -11,8 +11,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyCassetteBlock")]
     [Tracked]
     public class WonkyCassetteBlock : CassetteBlock {
-        private int[] OnAtBeats;
-        private readonly int ControllerIndex;
+        public int[] OnAtBeats;
+        public readonly int ControllerIndex;
 
         private readonly int OverrideBoostFrames;
         private int boostFrames = 0;

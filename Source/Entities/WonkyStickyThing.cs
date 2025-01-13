@@ -8,9 +8,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyStickyThing")]
     [Tracked]
     public class WonkyStickyThing : Solid {
-        private int[] OnAtBeats;
-        private readonly int ControllerIndex;
-        private readonly Color color;
+        public int[] OnAtBeats;
+        public readonly int ControllerIndex;
+
+        public readonly Color color;
 
         private readonly WonkyCassetteListener cassette;
 

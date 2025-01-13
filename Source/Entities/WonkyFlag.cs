@@ -9,11 +9,11 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/WonkyFlag")]
     [Tracked]
     public class WonkyFlag : Entity {
-        private int[] OnAtBeats;
+        public int[] OnAtBeats;
+        public readonly int ControllerIndex;
+
         private readonly string Flag;
         private readonly bool Invert;
-
-        private readonly int ControllerIndex;
 
         public WonkyFlag(EntityData data, Vector2 offset)
             : this(data.Position + offset, new EntityID(data.Level.Name, data.ID), data.Attr("flag"), data.Attr("onAtBeats"), data.Int("controllerIndex", 0), data.Bool("invert", false)) { }

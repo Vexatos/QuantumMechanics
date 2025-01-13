@@ -8,10 +8,10 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
     [CustomEntity("QuantumMechanics/CassetteWonkifier")]
     [Tracked]
     public class CassetteWonkifier : Entity {
-        private int[] OnAtBeats;
-        private readonly int CassetteIndex;
+        public int[] OnAtBeats;
+        public readonly int ControllerIndex;
 
-        private readonly int ControllerIndex;
+        private readonly int CassetteIndex;
 
         public CassetteWonkifier(Vector2 position, EntityID id, string moveSpec, int cassetteIndex, int controllerIndex)
             : base(position) {
