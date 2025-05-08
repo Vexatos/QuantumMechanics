@@ -378,6 +378,8 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         private delegate bool orig_Level_get_ShouldCreateCassetteManager(Level self);
         private static bool Level_get_ShouldCreateCassetteManager(orig_Level_get_ShouldCreateCassetteManager orig, Level self) {
             if (!CheckedForWonkyController) {
+                hasWonkyController = false;
+
                 foreach (EntityData entityData in self.Session.LevelData.Entities) {
                     if (entityData.Name == "QuantumMechanics/WonkyCassetteBlockController") {
                         hasWonkyController = true;
