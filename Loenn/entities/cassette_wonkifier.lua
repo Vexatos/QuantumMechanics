@@ -50,7 +50,8 @@ for i in ipairs(colors) do
         data = {
             onAtBeats = "1, 3",
             cassetteIndex = i - 1,
-            controllerIndex = 0
+            controllerIndex = 0,
+            freezeUpdate = false
         }
     }
 end

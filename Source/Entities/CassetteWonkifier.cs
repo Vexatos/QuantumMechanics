@@ -12,8 +12,9 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
         public readonly int ControllerIndex;
 
         private readonly int CassetteIndex;
+        private readonly bool DoFreezeUpdate;
 
-        public CassetteWonkifier(Vector2 position, EntityID id, string moveSpec, int cassetteIndex, int controllerIndex)
+        public CassetteWonkifier(Vector2 position, EntityID id, string moveSpec, int cassetteIndex, int controllerIndex, bool doFreezeUpdate)
             : base(position) {
 
             OnAtBeats = Utilities.OnAtBeats(moveSpec);
@@ -23,10 +24,12 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
 
             ControllerIndex = controllerIndex;
             CassetteIndex = cassetteIndex;
+
+            DoFreezeUpdate = doFreezeUpdate;
         }
 
         public CassetteWonkifier(EntityData data, Vector2 offset, EntityID id)
-            : this(data.Position + offset, id, data.Attr("onAtBeats"), data.Int("cassetteIndex", 0), data.Int("controllerIndex", 0)) { }
+            : this(data.Position + offset, id, data.Attr("onAtBeats"), data.Int("cassetteIndex", 0), data.Int("controllerIndex", 0), data.Bool("freezeUpdate", true)) { }
 
         public override void Awake(Scene scene) {
             base.Awake(scene);
@@ -41,7 +44,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                         OnWillDeactivate = () => block.WillToggle(),
                         OnActivated = () => block.Activated = true,
                         OnDeactivated = () => block.Activated = false,
-                        FreezeUpdate = () => block.Update()
+                        FreezeUpdate = this.DoFreezeUpdate ? () => block.Update() : null
                     });
                 }
             }
@@ -56,7 +59,7 @@ namespace Celeste.Mod.QuantumMechanics.Entities {
                         OnWillDeactivate = () => listener.WillToggle(),
                         OnActivated = () => listener.Activated = true,
                         OnDeactivated = () => listener.Activated = false,
-                        FreezeUpdate = () => listener.Entity?.Update()
+                        FreezeUpdate = this.DoFreezeUpdate ? () => listener.Entity?.Update() : null
                     });
                 }
             }

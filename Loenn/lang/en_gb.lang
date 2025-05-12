@@ -37,9 +37,11 @@ entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_0=Cassette
 entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_1=Cassette Wonkifier (1 - Rose)
 entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_2=Cassette Wonkifier (2 - Bright Sun)
 entities.QuantumMechanics/CassetteWonkifier.placements.name.wonkifier_3=Cassette Wonkifier (3 - Malachite)
+entities.QuantumMechanics/CassetteWonkifier.attributes.name.freezeUpdate=Update During Freeze Frames
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.onAtBeats=A list of integers (separated by a comma) corresponding to the beats on which blocks with matching index should activate, being deactivated on all other beats not included in this list.\nExample: 1, 2, 4
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.cassetteIndex=The colour of the cassette blocks to control.
 entities.QuantumMechanics/CassetteWonkifier.attributes.description.controllerIndex=The index of the controller that controls this cassette index. Must be 0 or greater. 0 refers to the main controller.
+entities.QuantumMechanics/CassetteWonkifier.attributes.description.freezeUpdate=Whether to update controlled cassette blocks during freeze frames.\nEnable this to make their behaviour closer to other wonky entities.\nDisable this to make their behaviour closer to their usual behaviour without wonky cassette music.
 
 # Wonky Sticky Thing
 entities.QuantumMechanics/WonkyStickyThing.placements.name.sticky_thing=Wonky Sticky Thing
